@@ -12,6 +12,7 @@ from huggingface_hub import hf_hub_download
 from .utils import get_pad_info, remove_padding
 from .model import DPTSegmentation
 
+from .ben_utils import refine_foreground_process
 
 @dataclass
 class RemovalResult:
@@ -97,7 +98,8 @@ class BackgroundRemoval:
     def remove_background(
         self,
         image: Union[np.ndarray, Image.Image],
-        threshold: float = 0.5
+        threshold: float = 0.5,
+        use_refiner : bool = True
     ) -> RemovalResult:
         if isinstance(image, Image.Image):
             image_pil = image.convert('RGB')
@@ -131,6 +133,20 @@ class BackgroundRemoval:
         rgba = np.dstack([image, alpha_channel])
         rgba_image = Image.fromarray(rgba, mode='RGBA')
         
+        # Using BEN Refiner to clean up the edges of the foreground object
+        mask_pil = Image.fromarray(alpha_channel, mode='L')
+        if use_refiner:
+            # refine_foreground_process trả về ảnh RGB đã được "giặt" sạch màu nền ở viền
+            refined_rgb_pil = refine_foreground_process(image_pil, mask_pil, r=90)
+            
+            # Gắn kênh Alpha (mask) vào bức ảnh đã được giặt sạch màu
+            rgba_image = refined_rgb_pil.copy()
+            rgba_image.putalpha(mask_pil)
+        else:
+            # Nếu không dùng Refiner, ghép thẳng như cũ
+            rgba = np.dstack([image, alpha_channel])
+            rgba_image = Image.fromarray(rgba, mode='RGBA')
+
         return RemovalResult(
             predicted_mask=predicted_mask,
             all_masks=all_masks_resized,
