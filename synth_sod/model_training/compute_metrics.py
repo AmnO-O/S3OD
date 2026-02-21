@@ -216,7 +216,7 @@ def main(
     img_size: int = 224, 
     datasets: str = 'all',
     compute_best_metrics: bool = False,
-    flux_model_path: str
+    flux_model_path: str = None
 ):
     datasets_list = get_datasets(datasets=datasets)
     print(f"Model type: {model_type}")
