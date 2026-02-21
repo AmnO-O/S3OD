@@ -1,5 +1,5 @@
 datasets:
-  - ${data_dir}/data/Train_Dataset/DIS-TR
+  - ${data_dir}/DIS-TR
 train_batch_size: 4
 val_batch_size: 4
 num_workers: 8
