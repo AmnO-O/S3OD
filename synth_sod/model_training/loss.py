@@ -175,8 +175,12 @@ class MaskLossHandler:
         total_loss = torch.tensor(0.0, device=pred_masks.device)
         loss_dict = {}
 
-        for comp in self.mask_components:
-            pred = torch.sigmoid(pred_masks) if comp.add_sigmoid else pred_masks
+        for comp in self.mask_components:            
+            if isinstance(comp.loss, FocalLoss): # BCEWithLogits needn't use sigmoid
+                pred = pred_masks 
+            else:
+                pred = torch.sigmoid(pred_masks) if comp.add_sigmoid else pred_masks
+
             component_loss = comp.loss(pred, target_masks)
             
             if component_loss.dim() > 0:

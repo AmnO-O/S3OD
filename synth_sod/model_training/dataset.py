@@ -112,7 +112,8 @@ class MaskDataset(Dataset):
             mask_path = self.get_mask_path(self.files[idx])
 
             image = Image.open(img_path).convert('RGB')
-            mask = Image.open(mask_path).convert('L')
+           # mask = Image.open(mask_path).convert('L')
+            mask = Image.open(mask_path).convert('L').point(lambda p: 255 if p > 127 else 0)
 
             # Check if shapes match (after converting to numpy arrays)
             img_array = np.array(image)
@@ -124,7 +125,7 @@ class MaskDataset(Dataset):
             augmented = self.transform(image=img_array, mask=mask_array)
             image, mask = augmented['image'], augmented['mask']
 
-            return {"images": self._array_to_batch(image), "masks": self._array_to_batch(mask / 255.0)}
+            return {"images": self._array_to_batch(image), "masks": self._array_to_batch(mask / 255.0).to(torch.float32)}
 
         except Exception as e:
             logging.error(f"Error loading {self.files[idx]}: {e}")
