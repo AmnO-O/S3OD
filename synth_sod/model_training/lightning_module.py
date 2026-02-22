@@ -6,7 +6,7 @@ import numpy as np
 import pytorch_lightning as pl
 import albumentations as A
 from torchmetrics.segmentation import DiceScore
-from torchmetrics.classification import BinaryJaccardIndex
+from torchmetrics.classification import BinaryJaccardIndex, BinaryF1Score
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
@@ -122,7 +122,8 @@ class SegmentationLightningModule(pl.LightningModule):
         )
         
         self.iou = BinaryJaccardIndex()
-        self.dice = DiceScore(num_classes=1, average='micro')
+        #self.dice = DiceScore(num_classes=1, average='micro')
+        self.dice = BinaryF1Score()
         self.image_logger = ImageLogger()
 
     def on_train_epoch_end(self):
