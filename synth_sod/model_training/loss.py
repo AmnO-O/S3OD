@@ -224,7 +224,9 @@ class MaskLossHandler:
             all_losses = comp.loss(pred_flat, target_flat)
             if all_losses.dim() == 4:
                 all_losses = all_losses.mean(dim=(1, 2, 3))
+                
             all_losses = all_losses.reshape(batch_size, num_masks)
+            best_indices = torch.clamp(best_indices, min=0, max=num_masks - 1)
             best_loss = all_losses.gather(1, best_indices.unsqueeze(1)).mean()
 
             component_loss = best_loss + all_losses.mean() * exp_decay
