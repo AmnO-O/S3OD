@@ -44,7 +44,7 @@ def get_task_subset(samples: List[Sample], max_tasks: int = 12) -> List[Sample]:
 def filter_already_processed(samples: List[Sample], output_path: str) -> List[Sample]:
     """Filter out samples that have already been processed to allow resuming."""
     output_dir = Path(output_path)
-    images_dir = output_dir / "images"
+    images_dir = output_dir / "im"
     
     if not images_dir.exists():
         return samples

@@ -196,8 +196,8 @@ class ImageMaskGenerationPipeline:
         """Process a single class - generate prompts, images and masks."""
         # Create directory structure
         class_dir = Path(self.config.save_path) / class_info.folder_name
-        images_dir = class_dir / "images"
-        masks_dir = class_dir / "masks"
+        images_dir = class_dir / "im"
+        masks_dir = class_dir / "gt"
         
         class_dir.mkdir(parents=True, exist_ok=True)
         images_dir.mkdir(exist_ok=True)

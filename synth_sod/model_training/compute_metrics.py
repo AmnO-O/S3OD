@@ -40,7 +40,7 @@ def load_metadata(metadata_dir: str, dataset: str) -> Dict[str, Dict[str, str]]:
 
 
 def process_dataset(data_dir: str, predictor: SODPredictor, compute_best_metrics: bool = False):
-    images = glob(f"{data_dir}/images/*")
+    images = glob(f"{data_dir}/im/*")
     metric_counter = EvaluationMetrics(device='cuda')
     best_metric_counter = EvaluationMetrics(device='cuda') if compute_best_metrics else None
     
@@ -101,7 +101,7 @@ def process_dataset(data_dir: str, predictor: SODPredictor, compute_best_metrics
 
 
 def process_dataset_teacher(data_dir: str, dataset: str, predictor: SODTeacherPredictor, metadata: Dict[str, Dict[str, str]], compute_best_metrics: bool = False):
-    images = glob(f"{data_dir}/images/*")
+    images = glob(f"{data_dir}/im/*")
     metric_counter = EvaluationMetrics(device='cuda')
     best_metric_counter = EvaluationMetrics(device='cuda') if compute_best_metrics else None
     processed_count = 0
@@ -188,7 +188,7 @@ def find_gt_mask_path(image_path: str, data_dir: str) -> Optional[str]:
             return mask_path
     
     for ext in mask_extensions:
-        mask_path = image_path.replace('/images/', '/masks/').replace(Path(image_path).suffix, ext)
+        mask_path = image_path.replace('/im/', '/gt/').replace(Path(image_path).suffix, ext)
         if os.path.exists(mask_path):
             return mask_path
     

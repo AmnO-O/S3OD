@@ -129,7 +129,7 @@ def get_image_files(data_folder: str, dataset: str) -> List[str]:
     Returns:
         List of image file paths
     """
-    dataset_path = os.path.join(data_folder, dataset, "images")
+    dataset_path = os.path.join(data_folder, dataset, "im")
     
     if not os.path.exists(dataset_path):
         print(f"Warning: Dataset path does not exist: {dataset_path}")

@@ -46,8 +46,8 @@ class MaskDataset(Dataset):
         self.transform = get_transforms(image_size, transform_mode)
         self.debug_subset_fraction = debug_subset_fraction
 
-        self.images_dir = os.path.join(root_dir, 'images')
-        self.masks_dir = os.path.join(root_dir, 'masks')
+        self.images_dir = os.path.join(root_dir, 'im')
+        self.masks_dir = os.path.join(root_dir, 'gt')
 
         valid_extensions = {'.jpg', '.jpeg', '.png'}
         all_files = [f for f in os.listdir(self.images_dir)

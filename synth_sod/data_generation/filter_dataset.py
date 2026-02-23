@@ -31,11 +31,11 @@ class Sample:
     
     def get_relative_path(self) -> str:
         """Get relative path for copying."""
-        return f"{self.class_name}/images/{self.sample_id}.jpg"
+        return f"{self.class_name}/im/{self.sample_id}.jpg"
     
     def get_mask_relative_path(self) -> str:
         """Get relative mask path for copying."""
-        return f"{self.class_name}/masks/{self.sample_id}.png"
+        return f"{self.class_name}/gt/{self.sample_id}.png"
 
 
 @dataclass
@@ -96,8 +96,8 @@ class DatasetLoader:
             if not class_dir.is_dir():
                 continue
                 
-            images_dir = class_dir / "images"
-            masks_dir = class_dir / "masks"
+            images_dir = class_dir / "im"
+            masks_dir = class_dir / "gt"
             
             if not (images_dir.exists() and masks_dir.exists()):
                 logging.warning(f"Skipping {class_dir.name}: missing images or masks directory")
@@ -227,8 +227,8 @@ class DatasetFilter:
     def _copy_sample(self, sample: Sample, output_dir: Path):
         """Copy sample files to flat output structure: images/class_name_index.jpg, masks/class_name_index.png"""
         # Create flat directory structure
-        images_dir = output_dir / "images"
-        masks_dir = output_dir / "masks"
+        images_dir = output_dir / "im"
+        masks_dir = output_dir / "gt"
         images_dir.mkdir(parents=True, exist_ok=True)
         masks_dir.mkdir(parents=True, exist_ok=True)
         
