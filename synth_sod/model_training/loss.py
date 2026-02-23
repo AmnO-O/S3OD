@@ -98,6 +98,68 @@ class IoULoss(nn.Module):
             return loss.sum()
         return loss
 
+class WeightedIoULoss(nn.Module):
+    def __init__(self, smooth: float = 1e-6, reduction: str = 'mean', edge_coef: float = 5.0):
+        super().__init__()
+        self.smooth = smooth
+        self.reduction = reduction
+        self.edge_coef = edge_coef
+        assert reduction in ['mean', 'sum', 'none'], "Invalid reduction"
+
+    def _sobel_edge_map(self, mask: torch.Tensor) -> torch.Tensor:
+        """Tạo bản đồ trọng số dựa trên đường viền của ground truth bằng Sobel Filter (thuần PyTorch)"""
+        with torch.no_grad():
+            eps = 1e-7
+            # Đảm bảo shape là (B, 1, H, W)
+            if mask.dim() == 3:
+                mask = mask.unsqueeze(1)
+                
+            # Định nghĩa bộ lọc Sobel (chạy trực tiếp trên GPU mà không cần chuyển qua CPU như OpenCV)
+            gx = torch.tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]], dtype=torch.float32, device=mask.device).view(1, 1, 3, 3)
+            gy = torch.tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], dtype=torch.float32, device=mask.device).view(1, 1, 3, 3)
+            
+            # Tích chập để tìm đạo hàm (đường viền)
+            grad_x = F.conv2d(mask, gx, padding=1)
+            grad_y = F.conv2d(mask, gy, padding=1)
+            mag = torch.sqrt(grad_x**2 + grad_y**2 + eps)
+            
+            # Chuẩn hóa giá trị đường viền về khoảng [0, 1] theo từng ảnh trong Batch
+            mag = mag / (mag.view(mag.size(0), -1).max(dim=1)[0].view(-1, 1, 1, 1).clamp(min=eps))
+            return mag
+
+    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        # 1. Xử lý chiều không gian: đảm bảo luôn có chiều kênh (channel) (B, C, H, W)
+        if pred.dim() == 3:
+            pred = pred.unsqueeze(1)
+            target = target.unsqueeze(1)
+            
+        target_float = target.float()
+        
+        # 2. Tạo Weight Map (Trọng số lớn hơn ở các vùng viền/mép)
+        edge = self._sobel_edge_map(target_float)
+        weight_map = 1.0 + self.edge_coef * edge
+        
+        # Chuẩn hóa weight_map để trung bình bằng 1, không làm thay đổi Scale của Gradient (rất quan trọng)
+        weight_map = weight_map / weight_map.mean(dim=[2, 3], keepdim=True)
+
+        # 3. Duỗi phẳng (Flatten) các tensor để tính IoU an toàn, tránh lỗi Scatter
+        pred_flat = pred.contiguous().view(pred.size(0), -1)
+        target_flat = target_float.contiguous().view(target_float.size(0), -1)
+        weight_flat = weight_map.contiguous().view(weight_map.size(0), -1)
+
+        # 4. Tính Weighted Intersection & Union
+        inter = (pred_flat * target_flat * weight_flat).sum(dim=1)
+        union = ((pred_flat + target_flat - pred_flat * target_flat) * weight_flat).sum(dim=1)
+        
+        wiou = (inter + self.smooth) / (union + self.smooth)
+        loss = 1 - wiou
+
+        # 5. Output dựa trên biến reduction
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
 
 class DiceLoss(nn.Module):
     def __init__(self, smooth: float = 1e-6, reduction: str = 'mean'):
