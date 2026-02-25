@@ -1,6 +1,7 @@
 save_dir: ${base_dir}/checkpoints
 log_dir: ${base_dir}/logs
 max_images: 8
+freeze_encoder: false
 enable_image_logging: false
 experiment_name: "test_sod"
 checkpoint_path:

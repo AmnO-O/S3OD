@@ -115,6 +115,15 @@ class SegmentationLightningModule(pl.LightningModule):
         self.config = config
         self.model = hydra.utils.instantiate(config.model)
 
+        self.freeze_encoder = self.config.train_stage.get('freeze_encoder', False)
+
+        if self.freeze_encoder:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+            print("❄️ CẤU HÌNH: ĐÃ ĐÓNG BĂNG DINO-v3 Encoder!")
+        else:
+            print("🔥 CẤU HÌNH: TRAIN TOÀN BỘ MÔ HÌNH (DINO-v3 + Head)!")
+
         self.loss_module = LossModule(
             config.loss.criterions,
             full_mask_lambda=config.loss.get('full_mask_lambda', 0.01),
@@ -141,10 +150,24 @@ class SegmentationLightningModule(pl.LightningModule):
             torch.cuda.empty_cache()
 
     def configure_optimizers(self):
-        param_groups = [
-            {"params": self.model.encoder.parameters(), "lr": self.config.optimizer.lr},
-            {"params": self.model.seg_head.parameters(), "lr": self.config.optimizer.lr * 10}
-        ]
+    #  param_groups = [
+    #      {"params": self.model.encoder.parameters(), "lr": self.config.optimizer.lr},
+    #      {"params": self.model.seg_head.parameters(), "lr": self.config.optimizer.lr * 10}
+    #  ]
+
+        param_groups = []
+
+        if not self.freeze_encoder:
+            param_groups.append({
+                "params": filter(lambda p: p.requires_grad, self.model.encoder.parameters()), 
+                "lr": self.config.optimizer.lr
+            })
+            
+        param_groups.append({
+            "params": filter(lambda p: p.requires_grad, self.model.seg_head.parameters()), 
+            "lr": self.config.optimizer.lr * 10
+        })
+
         optimizer = torch.optim.AdamW(params=param_groups, weight_decay=0.05, betas=[0.9, 0.999], eps=1e-8)
         
         if 'schedulers' in self.config.scheduler.keys():
