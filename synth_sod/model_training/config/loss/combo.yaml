@@ -30,14 +30,6 @@ criterions:
       reduction: none
     add_sigmoid: true
 
-  - name: ce_loss
-    target_key: labels
-    output_key: pred_cls
-    weight: 1.0
-    loss:
-      _target_: torch.nn.CrossEntropyLoss
-      reduction: mean
-    add_sigmoid: false
 
   - name: mse_ious_loss
     target_key: gt_ious

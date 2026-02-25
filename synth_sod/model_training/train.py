@@ -121,20 +121,32 @@ def train(config: DictConfig):
         logger=logger,
         strategy=config.backend.get('strategy', 'fsdp'),
     )
+
+#    if config.train_stage.checkpoint_path is not None:
+#        if config.train_stage.weights_only:
+#            state_dict = SegmentationLightningModule.load_from_checkpoint(
+#                config.train_stage.checkpoint_path,
+#                weights_only=True,
+#            ).state_dict()
+#            model.load_state_dict(state_dict)
+#            trainer.fit(model, train_loader, val_loader)
+#        else:
+#            trainer.fit(model, train_loader, val_loader, ckpt_path=config.train_stage.checkpoint_path)
+#    else:
+#        trainer.fit(model, train_loader, val_loader)
+
     if config.train_stage.checkpoint_path is not None:
         if config.train_stage.weights_only:
+            print(f"... Loading weights from: {config.train_stage.checkpoint_path}")
 
-            state_dict = SegmentationLightningModule.load_from_checkpoint(
-                config.train_stage.checkpoint_path,
-                weights_only=True,
-            ).state_dict()
-            model.load_state_dict(state_dict)
+            ckpt = torch.load(config.train_stage.checkpoint_path, map_location='cpu')
+            state_dict = ckpt['state_dict'] if 'state_dict' in ckpt else ckpt
+            model.load_state_dict(state_dict, strict=False)
             trainer.fit(model, train_loader, val_loader)
         else:
             trainer.fit(model, train_loader, val_loader, ckpt_path=config.train_stage.checkpoint_path)
     else:
         trainer.fit(model, train_loader, val_loader)
-
 
 if __name__ == "__main__":
     train()
