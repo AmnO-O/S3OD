@@ -1,0 +1,51 @@
+criterions:
+  - name: focal_loss
+    target_key: masks
+    output_key: pred_masks
+    weight: 8.0        # giữ focal là chính, scale vừa phải
+    loss:
+      _target_: model_training.loss.FocalLoss
+      alpha: 0.75
+      gamma: 2.0
+      reduction: none
+    add_sigmoid: false
+
+  - name: wiou_loss
+    target_key: masks
+    output_key: pred_masks
+    weight: 0.8        # start slightly <1 for warm-up
+    loss:
+      _target_: model_training.loss.WeightedIoULoss
+      smooth: 1e-4
+      edge_coef: 3.0
+      reduction: none
+    add_sigmoid: true
+
+  - name: ssim_loss
+    target_key: masks
+    output_key: pred_masks
+    weight: 1.0
+    loss:
+      _target_: model_training.loss.SSIMLoss
+      reduction: none
+    add_sigmoid: true
+
+  - name: ce_loss
+    target_key: labels
+    output_key: pred_cls
+    weight: 1.0
+    loss:
+      _target_: torch.nn.CrossEntropyLoss
+      reduction: mean
+    add_sigmoid: false
+
+  - name: mse_ious_loss
+    target_key: gt_ious
+    output_key: pred_iou
+    weight: 0.05
+    loss:
+      _target_: torch.nn.MSELoss
+    add_sigmoid: false
+
+full_mask_lambda: 0.01
+decay_rate: 0.2
