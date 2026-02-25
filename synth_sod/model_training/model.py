@@ -241,6 +241,7 @@ class BaseDPTSegmentationHead(nn.Module):
             nn.Flatten(),
             nn.Linear(features, 64),
             nn.ReLU(True),
+            nn.Dropout(p=0.5),    # chặn 50% neuron để tránh overfitting
             nn.Linear(64, num_outputs)
         )
     
@@ -483,6 +484,7 @@ class MultiMaskHead(nn.Module):
             nn.Sequential(
                 nn.Conv2d(inter_features * 2, inter_features, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
+                nn.Dropout2d(0.05),
                 nn.Conv2d(inter_features, 1, kernel_size=1, stride=1, padding=0),
             ) for _ in range(n_masks)
         ])
@@ -551,6 +553,7 @@ class FluxFeatureFusion(nn.Module):
                 nn.Conv2d(fusion_input_dim, output_dim, kernel_size=3, padding=1),
                 nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
+                nn.Dropout2d(0.1), # Drop bớt 10% feature map sau lần nhào nặn đầu tiên
                 nn.Conv2d(output_dim, output_dim, kernel_size=1),
                 nn.BatchNorm2d(output_dim),
             )
