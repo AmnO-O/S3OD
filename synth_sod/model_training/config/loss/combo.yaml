@@ -10,7 +10,7 @@ criterions:
       reduction: none
     add_sigmoid: false
 
-  - name: wiou_loss
+  - name: iou_loss
     target_key: masks
     output_key: pred_masks
     weight: 0.8        # start slightly <1 for warm-up
