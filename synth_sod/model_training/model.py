@@ -553,7 +553,6 @@ class FluxFeatureFusion(nn.Module):
                 nn.Conv2d(fusion_input_dim, output_dim, kernel_size=3, padding=1),
                 nn.BatchNorm2d(output_dim),
                 nn.ReLU(inplace=True),
-                nn.Dropout2d(0.1), # Drop bớt 10% feature map sau lần nhào nặn đầu tiên
                 nn.Conv2d(output_dim, output_dim, kernel_size=1),
                 nn.BatchNorm2d(output_dim),
             )
