@@ -241,7 +241,7 @@ class BaseDPTSegmentationHead(nn.Module):
             nn.Flatten(),
             nn.Linear(features, 64),
             nn.ReLU(True),
-            nn.Dropout(p=0.5),    # chặn 50% neuron để tránh overfitting
+            nn.Dropout(p=0.2),    # chặn 20% neuron để tránh overfitting
             nn.Linear(64, num_outputs)
         )
     

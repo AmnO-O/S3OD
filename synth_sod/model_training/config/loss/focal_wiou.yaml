@@ -1,0 +1,32 @@
+criterions:
+  - name: focal_loss
+    target_key: masks
+    output_key: pred_masks
+    weight: 20
+    loss:
+      _target_: model_training.loss.FocalLoss
+      alpha: 0.75
+      gamma: 2.0
+      reduction: none
+    add_sigmoid: false  # QUAN TRỌNG: FocalLoss dùng BCEWithLogits nên tuyệt đối KHÔNG cộng thêm sigmoid ở ngoài
+
+  - name: wiou_loss
+    target_key: masks
+    output_key: pred_masks
+    weight: 1.0
+    loss:
+      _target_: model_training.loss.WeightedIoULoss
+      smooth: 1e-6
+      edge_coef: 5.0    # Hệ số làm nét viền (có thể tăng lên 10 nếu muốn viền gắt hơn)
+      reduction: none
+    add_sigmoid: true   # Cần sigmoid để đưa pred về [0, 1] trước khi tính IoU
+
+  - name: mse_ious_loss
+    target_key: gt_ious
+    output_key: pred_iou
+    weight: 0.05
+    loss:
+      _target_: torch.nn.MSELoss
+
+full_mask_lambda: 0.1
+decay_rate: 0.2
