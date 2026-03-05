@@ -168,6 +168,8 @@ class BaseDPTSegmentationHead(nn.Module):
             nn.Flatten(),
             nn.Linear(features, 64),
             nn.ReLU(True),
+            nn.Dropout(p=0.2),    # chặn 20% neuron để tránh overfitting
+
             nn.Linear(64, num_outputs)
         )
     
@@ -347,6 +349,7 @@ class MultiMaskHead(nn.Module):
             nn.Sequential(
                 nn.Conv2d(inter_features * 2, inter_features, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
+                nn.Dropout2d(0.05), # Thêm dropout để giảm overfitting
                 nn.Conv2d(inter_features, 1, kernel_size=1, stride=1, padding=0),
             ) for _ in range(n_masks)
         ])
