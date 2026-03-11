@@ -241,7 +241,6 @@ class BaseDPTSegmentationHead(nn.Module):
             nn.Flatten(),
             nn.Linear(features, 64),
             nn.ReLU(True),
-            nn.Dropout(p=0.2),    # chặn 20% neuron để tránh overfitting
             nn.Linear(64, num_outputs)
         )
     
@@ -466,6 +465,36 @@ def _make_fusion_block(features, use_bn, size=None):
         size=size,
     )
 
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride = 1):
+        super(ResidualBlock, self).__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels = in_channels, out_channels=in_channels * 2, kernel_size=3, stride=stride, padding=1),
+            nn.BatchNorm2d(num_features = in_channels * 2),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.1),
+
+            nn.Conv2d(in_channels = in_channels * 2, out_channels = out_channels,
+                    kernel_size = 3, stride = 1, padding = 1),
+        
+            nn.BatchNorm2d(num_features = out_channels),
+        )
+
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
+                nn.BatchNorm2d(out_channels)
+            )
+        else:
+            self.shortcut = nn.Sequential()
+        
+    def forward(self,x):
+        identity = x
+        out = self.block(x)
+        out += self.shortcut(identity)
+
+        return torch.relu(out)
+
 
 class MultiMaskHead(nn.Module):
     """Multi-mask prediction head."""
@@ -478,13 +507,14 @@ class MultiMaskHead(nn.Module):
             nn.ConvTranspose2d(in_features // 2, inter_features * 2, kernel_size=4, stride=2, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(inter_features * 2, inter_features * 2, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
+            ResidualBlock(inter_features * 2, inter_features * 2, stride=1) # Added residual block for better feature learning
+
         )
         self.mask_heads = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(inter_features * 2, inter_features, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
-                nn.Dropout2d(0.05), # Thêm dropout để giảm overfitting
                 nn.Conv2d(inter_features, 1, kernel_size=1, stride=1, padding=0),
             ) for _ in range(n_masks)
         ])
