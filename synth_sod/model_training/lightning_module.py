@@ -118,9 +118,13 @@ class SegmentationLightningModule(pl.LightningModule):
         self.freeze_encoder = self.config.train_stage.get('freeze_encoder', False)
 
         if self.freeze_encoder:
-            for param in self.model.encoder.parameters():
+            for param in self.model.parameters():
                 param.requires_grad = False
-            print("❄️ CẤU HÌNH: ĐÃ ĐÓNG BĂNG DINO-v3 Encoder!")
+                
+            print("❄️ ĐÃ KHÓA TOÀN BỘ TRỌNG SỐ: Mô hình hiện đang ở chế độ Read-Only.")
+
+            for param in self.model.seg_head.parameters():
+                param.requires_grad = True
         else:
             print("🔥 CẤU HÌNH: TRAIN TOÀN BỘ MÔ HÌNH (DINO-v3 + Head)!")
 
